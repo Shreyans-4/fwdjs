@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta http-equiv="X-Frame-Options" content="DENY" />
+  <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+  <title>My Profile - SkillSwap</title>
+  <meta name="description" content="View and manage your SkillSwap profile" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Background Elements -->
+  <div class="gradient-mesh"></div>
+  <div class="background-canvas" id="background-canvas"></div>
+
+  <!-- Header Navigation -->
+  <header class="header" id="header">
+    <div class="header-content">
+      <div class="logo-block" onclick="window.location.href='index.html'">
+        <span class="logo-svg">
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+            <rect x="5" y="5" width="22" height="22" rx="5" fill="url(#paint0_linear)"/>
+            <rect x="11" y="11" width="10" height="10" rx="3" fill="white" fill-opacity="0.7"/>
+            <defs>
+              <linearGradient id="paint0_linear" x1="5" y1="5" x2="27" y2="27" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6C3AE1"/>
+                <stop offset="1" stop-color="#36C7FF"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </span>
+        <span class="logo-title">SkillSwap</span>
+      </div>
+
+      <nav class="nav-links" id="navLinks" role="navigation" aria-label="Main navigation">
+        <a href="index.html#home">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="index.html#community">Community</a>
+        <a href="index.html#about">About</a>
+        <a href="index.html#contact">Contact</a>
+      </nav>
+
+      <!-- User menu when logged in -->
+      <div class="user-menu" id="userMenu" style="display: block;">
+        <button class="user-avatar" onclick="toggleUserDropdown()" aria-label="User menu" aria-expanded="false" aria-haspopup="true">
+          <span id="userInitials" aria-hidden="true">JD</span>
+        </button>
+        <div class="user-dropdown" id="userDropdown" role="menu" aria-label="User menu options">
+          <a href="profile.html" role="menuitem">My Profile</a>
+          <a href="#" onclick="logout()" role="menuitem">Logout</a>
+        </div>
+      </div>
+
+      <button class="menu-toggle" id="menuToggle" aria-label="Toggle mobile menu" aria-expanded="false">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main role="main">
+    <div class="profile-container">
+      <!-- Profile Header -->
+      <div class="profile-header">
+        <div class="profile-avatar-large" id="profileAvatar">
+          JD
+        </div>
+        <div class="profile-info">
+          <h1 class="profile-name" id="profileName">John Doe</h1>
+          <p class="profile-email" id="profileEmail">john.doe@example.com</p>
+          <button class="profile-edit-btn" onclick="editProfile()" aria-label="Edit profile information">
+            Edit Profile
+          </button>
+        </div>
+      </div>
+
+      <!-- Profile Content -->
+      <div class="profile-content">
+        <!-- Skills I Can Teach -->
+        <div class="profile-card">
+          <h3>Skills I Can Teach</h3>
+          <div class="skill-list" id="teachSkillsList">
+            <div class="skill-item">Web Development</div>
+            <div class="skill-item">JavaScript</div>
+            <div class="skill-item">React.js</div>
+          </div>
+        </div>
+
+        <!-- Skills I Want to Learn -->
+        <div class="profile-card">
+          <h3>Skills I Want to Learn</h3>
+          <div class="skill-list" id="learnSkillsList">
+            <div class="skill-item">Graphic Design</div>
+            <div class="skill-item">UI/UX Design</div>
+            <div class="skill-item">Photography</div>
+          </div>
+        </div>
+
+        <!-- About Me -->
+        <div class="profile-card full-width">
+          <h3>About Me</h3>
+          <p class="bio-text" id="profileBio">
+            Passionate developer and lifelong learner. I love building web applications and sharing my knowledge with others. Looking to expand my skills in design and creative fields.
+          </p>
+        </div>
+
+        <!-- Activity Stats -->
+        <div class="profile-card">
+          <h3>My Activity</h3>
+          <div style="padding: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+              <span style="color: var(--muted-foreground);">Sessions Completed</span>
+              <strong>0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+              <span style="color: var(--muted-foreground);">Connections Made</span>
+              <strong>0</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--muted-foreground);">Hours Taught</span>
+              <strong>0h</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Settings -->
+        <div class="profile-card">
+          <h3>Account Settings</h3>
+          <div style="padding: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(0,0,0,0.1);">
+              <div>
+                <strong style="display: block; margin-bottom: 0.25rem;">Email Notifications</strong>
+                <span style="color: var(--muted-foreground); font-size: 0.9rem;">Receive updates about matches</span>
+              </div>
+              <label class="toggle-switch" for="emailNotifications" aria-label="Toggle email notifications">
+                <input type="checkbox" id="emailNotifications" checked onchange="toggleNotifications(this)" aria-label="Email notifications toggle">
+                <span class="toggle-slider" aria-hidden="true"></span>
+              </label>
+            </div>
+            <button class="delete-account-btn" onclick="deleteAccount()" aria-label="Delete account permanently">
+              Delete Account
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>SkillSwap</h3>
+        <p style="color: rgba(255,255,255,0.7); line-height: 1.7;">
+          Empowering people to learn and teach skills in a collaborative community.
+        </p>
+      </div>
+
+      <div class="footer-section">
+        <h3>Product</h3>
+        <ul>
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#testimonials">Testimonials</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#careers">Careers</a></li>
+          <li><a href="#blog">Blog</a></li>
+          <li><a href="#press">Press Kit</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Support</h3>
+        <ul>
+          <li><a href="#help">Help Center</a></li>
+          <li><a href="#contact">Contact Us</a></li>
+          <li><a href="#privacy">Privacy Policy</a></li>
+          <li><a href="#terms">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 SkillSwap. All rights reserved. Built with ❤️ for learners worldwide.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

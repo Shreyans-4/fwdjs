@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillSwap - Connect & Learn</title>
+  <meta name="description" content="Join SkillSwap to exchange skills with peers" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Background Elements -->
+  <div class="gradient-mesh"></div>
+  <div class="background-canvas" id="background-canvas"></div>
+
+  <!-- Header Navigation -->
+  <header class="header" id="header">
+    <div class="header-content">
+      <div class="logo-block" onclick="window.location.href='index.html'">
+        <span class="logo-svg">
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+            <rect x="5" y="5" width="22" height="22" rx="5" fill="url(#paint0_linear)"/>
+            <rect x="11" y="11" width="10" height="10" rx="3" fill="white" fill-opacity="0.7"/>
+            <defs>
+              <linearGradient id="paint0_linear" x1="5" y1="5" x2="27" y2="27" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6C3AE1"/>
+                <stop offset="1" stop-color="#36C7FF"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </span>
+        <span class="logo-title">SkillSwap</span>
+      </div>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="#home">Home</a>
+        <a href="#features">Features</a>
+        <a href="#community">Community</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <div class="header-btns" id="authButtons">
+        <button class="btn ghost" onclick="openLoginModal()">Log In</button>
+        <button class="btn gradient" onclick="openSignupModal()">Sign Up</button>
+      </div>
+
+      <!-- User menu when logged in (hidden by default) -->
+      <div class="user-menu" id="userMenu" style="display: none;">
+        <div class="user-avatar" onclick="toggleUserDropdown()">
+          <span id="userInitials">JD</span>
+        </div>
+        <div class="user-dropdown" id="userDropdown">
+          <a href="profile.html">My Profile</a>
+          <a href="#" onclick="logout()">Logout</a>
+        </div>
+      </div>
+
+      <div class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-container" id="home">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          <span>Join 10,000+ Active Learners</span>
+        </div>
+
+        <h1 class="hero-headline">
+          Exchange Skills, Build <br>
+          <span class="hero-highlight">Meaningful Connections</span>
+        </h1>
+
+        <p class="hero-desc">
+          Connect with passionate learners and teachers worldwide. Share your expertise, 
+          learn new skills, and grow together in our vibrant community.
+        </p>
+
+        <div class="hero-cta-group">
+          <button class="hero-btn" onclick="openSignupModal()">
+            Get Started Free
+            <span class="arrow-icon">→</span>
+          </button>
+          <button class="hero-btn-secondary">
+            Watch Demo
+          </button>
+        </div>
+      </div>
+
+      <!-- Dashboard Preview Illustration -->
+      <div class="illustration-wrap">
+        <div class="dashboard-preview">
+          <div class="dashboard-card">
+            <div class="profile-mini">
+              <div class="avatar">👨‍💻</div>
+              <div class="info">
+                <strong>John Smith</strong>
+                <span>Teaching: React.js</span>
+              </div>
+            </div>
+          </div>
+          <div class="dashboard-card">
+            <div class="profile-mini">
+              <div class="avatar">👩‍🎨</div>
+              <div class="info">
+                <strong>Sarah Lee</strong>
+                <span>Learning: UI/UX Design</span>
+              </div>
+            </div>
+          </div>
+          <div class="dashboard-card highlight">
+            <div class="match-badge">✨ Perfect Match!</div>
+            <p>You both want to exchange skills</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+      <div class="stats-container">
+        <div class="stat-item">
+          <div class="stat-number">10K+</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">500+</div>
+          <div class="stat-label">Skills Shared</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">50K+</div>
+          <div class="stat-label">Connections Made</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">98%</div>
+          <div class="stat-label">Satisfaction Rate</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+      <div class="section-header">
+        <span class="section-badge">Features</span>
+        <h2 class="section-title">Everything You Need to Succeed</h2>
+        <p class="section-desc">
+          Powerful tools and features designed to make skill sharing seamless and effective
+        </p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3 class="feature-title">Smart Matching</h3>
+          <p class="feature-desc">
+            Our AI-powered algorithm connects you with the perfect learning partners based on your skills and interests.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">💬</div>
+          <h3 class="feature-title">Real-Time Chat</h3>
+          <p class="feature-desc">
+            Communicate instantly with your learning partners through our integrated messaging system.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📅</div>
+          <h3 class="feature-title">Easy Scheduling</h3>
+          <p class="feature-desc">
+            Coordinate sessions effortlessly with our built-in calendar and scheduling tools.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🏆</div>
+          <h3 class="feature-title">Progress Tracking</h3>
+          <p class="feature-desc">
+            Monitor your learning journey with detailed analytics and achievement badges.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3 class="feature-title">Global Community</h3>
+          <p class="feature-desc">
+            Connect with learners from around the world and expand your cultural horizons.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3 class="feature-title">Secure & Private</h3>
+          <p class="feature-desc">
+            Your data is protected with enterprise-grade security and privacy measures.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>SkillSwap</h3>
+        <p style="color: rgba(255,255,255,0.7); line-height: 1.7;">
+          Empowering people to learn and teach skills in a collaborative community.
+        </p>
+      </div>
+
+      <div class="footer-section">
+        <h3>Product</h3>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#testimonials">Testimonials</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#careers">Careers</a></li>
+          <li><a href="#blog">Blog</a></li>
+          <li><a href="#press">Press Kit</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Support</h3>
+        <ul>
+          <li><a href="#help">Help Center</a></li>
+          <li><a href="#contact">Contact Us</a></li>
+          <li><a href="#privacy">Privacy Policy</a></li>
+          <li><a href="#terms">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 SkillSwap. All rights reserved. Built with ❤️ for learners worldwide.</p>
+    </div>
+  </footer>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('loginModal')">×</button>
+      <div class="modal-header">
+        <h2>Welcome Back!</h2>
+        <p>Log in to continue your learning journey</p>
+      </div>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('loginModal')">Cancel</button>
+          <button type="submit" class="btn-primary">Log In</button>
+        </div>
+      </form>
+      <div class="modal-switch">
+        Don't have an account? <a onclick="switchToSignup()">Sign up</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signup Modal -->
+  <div class="modal-overlay" id="signupModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('signupModal')">×</button>
+      <div class="modal-header">
+        <h2>Create Account</h2>
+        <p>Join our community of learners and teachers</p>
+      </div>
+      <form id="signupForm" onsubmit="handleSignup(event)">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="fullName" placeholder="John Doe" required>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="your@email.com" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Create a strong password" required minlength="6">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('signupModal')">Cancel</button>
+          <button type="submit" class="btn-primary">Sign Up</button>
+        </div>
+      </form>
+      <div class="modal-switch">
+        Already have an account? <a onclick="switchToLogin()">Log in</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preferences Modal -->
+  <div class="modal-overlay" id="preferencesModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Set Your Preferences</h2>
+        <p>Tell us about your skills and interests</p>
+      </div>
+      <form id="preferencesForm" onsubmit="handlePreferences(event)">
+        <div class="form-group">
+          <label>Skills You Can Teach</label>
+          <div class="skill-tags" id="teachSkills">
+            <div class="skill-tag" onclick="toggleSkill(this)">Web Development</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Graphic Design</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Photography</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Writing</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Marketing</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Music</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Cooking</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Language</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Skills You Want to Learn</label>
+          <div class="skill-tags" id="learnSkills">
+            <div class="skill-tag" onclick="toggleSkill(this)">Web Development</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Graphic Design</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Photography</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Writing</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Marketing</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Music</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Cooking</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">Language</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Tell us about yourself</label>
+          <textarea id="bio" placeholder="Share your experience, goals, and what you're passionate about..." required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn-primary" style="width: 100%;">Complete Setup</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div class="modal-overlay" id="successModal">
+    <div class="modal">
+      <div class="success-message">
+        <div class="success-icon">🎉</div>
+        <h3>Welcome to SkillSwap!</h3>
+        <p>Your account has been created successfully. Start exploring and connecting with others!</p>
+        <button class="btn-primary" onclick="goToDashboard()" style="width: 100%;">
+          Go to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
