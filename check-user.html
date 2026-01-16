@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>Check User Data</title></head>
+<body>
+<h1>Current User Data</h1>
+<pre id="output"></pre>
+<button onclick="clearData()">Clear All Data</button>
+<script>
+const currentUser = localStorage.getItem('currentUser');
+document.getElementById('output').textContent = currentUser || 'No user data found';
+function clearData() {
+  localStorage.clear();
+  alert('All data cleared! Please log in again.');
+  window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>

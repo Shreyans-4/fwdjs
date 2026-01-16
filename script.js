@@ -128,18 +128,79 @@ document.addEventListener('click', (e) => {
   }
 });
 
+// Basic API helper state
+const API_BASE = '';
+let currentUser = null;
+
+// Build initials for avatars
+function getInitialsFromName(name = '') {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || 'U';
+}
+
+// Generic JSON API wrapper with consistent error handling
+async function apiRequest(path, options = {}) {
+  const mergedOptions = {
+    method: options.method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+    credentials: 'include',
+    body: options.body,
+  };
+  
+  if (['GET', 'HEAD'].includes(mergedOptions.method)) {
+    delete mergedOptions.body;
+  }
+  
+  const response = await fetch(`${API_BASE}${path}`, mergedOptions);
+  const data = await response.json().catch(() => ({}));
+  
+  if (!response.ok) {
+    const message = data.message || 'Request failed';
+    throw new Error(message);
+  }
+  
+  return data;
+}
+
+async function fetchCurrentUser() {
+  try {
+    const data = await apiRequest('/api/me');
+    currentUser = data.user;
+    return currentUser;
+  } catch (err) {
+    currentUser = null;
+    return null;
+  }
+}
+
 /* ============================================
    MODAL FUNCTIONS
    Open, close, and switch between modals
 ============================================ */
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  } else {
+    console.error('Modal not found:', modalId);
+  }
+}
+
 function openLoginModal() {
-  document.getElementById('loginModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
+  openModal('loginModal');
 }
 
 function openSignupModal() {
-  document.getElementById('signupModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
+  openModal('signupModal');
 }
 
 function closeModal(modalId) {
@@ -238,7 +299,7 @@ function clearError(inputId) {
    FORM HANDLERS
    Handle login, signup, and preferences forms
 ============================================ */
-function handleLogin(event) {
+async function handleLogin(event) {
   event.preventDefault();
   
   const emailInput = document.getElementById('loginEmail');
@@ -250,11 +311,9 @@ function handleLogin(event) {
   const email = emailInput.value.trim();
   const password = passwordInput.value;
   
-  // Clear previous errors
   clearError('loginEmail');
   clearError('loginPassword');
   
-  // Validate inputs
   if (!email) {
     showError('loginEmail', 'Email is required');
     return;
@@ -270,63 +329,65 @@ function handleLogin(event) {
     return;
   }
   
-  // Show loading state
   btn.textContent = 'Logging in...';
   btn.disabled = true;
   
-  setTimeout(() => {
-    try {
-      // Check if user exists in localStorage
-      const storedUser = localStorage.getItem('userData');
-      
-      if (storedUser) {
-        const userData = JSON.parse(storedUser);
-        
-        if (userData.email === email) {
-          // Mark user as logged in
-          localStorage.setItem('isLoggedIn', 'true');
-          
-          closeModal('loginModal');
-          
-          // Update UI to show logged in state
-          updateUIForLoggedInUser();
-          
-          showToast('Login successful!');
-          
-          // Redirect to profile page
-          setTimeout(() => {
-            window.location.href = 'profile.html';
-          }, 500);
-        } else {
-          showError('loginPassword', 'Invalid email or password');
-        }
-      } else {
-        showError('loginEmail', 'No account found. Please sign up first');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      showError('loginEmail', 'An error occurred. Please try again');
-    } finally {
+  try {
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, password })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      showError('loginPassword', data.message || 'Invalid email or password');
       btn.textContent = 'Log In';
       btn.disabled = false;
+      return;
     }
-  }, 1500);
+    
+    // Set current user from backend response with ALL data
+    currentUser = {
+      id: data.user.id,
+      name: data.user.fullName,
+      fullName: data.user.fullName,
+      email: data.user.email,
+      teachSkills: data.user.teachSkills || [],
+      learnSkills: data.user.learnSkills || [],
+      bio: data.user.bio || ''
+    };
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    
+    closeModal('loginModal');
+    updateUIForLoggedInUser(currentUser);
+    showToast('Login successful!');
+    
+    setTimeout(() => {
+      window.location.href = 'profile.html';
+    }, 500);
+  } catch (error) {
+    const message = error?.message || 'An error occurred. Please try again';
+    showError('loginPassword', message);
+  } finally {
+    btn.textContent = 'Log In';
+    btn.disabled = false;
+  }
 }
 
-function handleSignup(event) {
+async function handleSignup(event) {
   event.preventDefault();
   
-  // Get form data
   const fullName = document.getElementById('fullName').value.trim();
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   
-  // Clear previous errors
   clearError('fullName');
   clearError('email');
   clearError('password');
   
-  // Validate inputs
   if (!fullName) {
     showError('fullName', 'Full name is required');
     return;
@@ -357,71 +418,82 @@ function handleSignup(event) {
     return;
   }
   
-  // Check password strength
   const strength = getPasswordStrength(password);
   if (strength.level === 'weak') {
     showError('password', 'Password is too weak. Add uppercase, numbers, or special characters');
     return;
   }
   
-  // Simulate signup process
   const btn = event.target.querySelector('.btn-primary');
   btn.textContent = 'Creating Account...';
   btn.disabled = true;
   
-  setTimeout(() => {
-    try {
-      // Check if email already exists
-      const existingUser = localStorage.getItem('userData');
-      if (existingUser) {
-        const userData = JSON.parse(existingUser);
-        if (userData.email === email) {
-          showError('email', 'This email is already registered');
-          btn.textContent = 'Sign Up';
-          btn.disabled = false;
-          return;
-        }
-      }
-      
-      // Store user data (in production, password should be hashed)
-      localStorage.setItem('userData', JSON.stringify({ 
-        fullName, 
-        email,
-        passwordHash: btoa(password), // Simple encoding for demo (NOT secure for production)
-        createdAt: new Date().toISOString()
-      }));
-      
-      showToast('Account created successfully!');
-      
-      // Close signup modal and open preferences modal
-      closeModal('signupModal');
-      setTimeout(() => {
-        document.getElementById('preferencesModal').classList.add('active');
-      }, 300);
-      
+  try {
+    const response = await fetch('/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ fullName, email, password })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      showError('email', data.message || 'An error occurred');
       btn.textContent = 'Sign Up';
       btn.disabled = false;
-      event.target.reset();
-    } catch (error) {
-      console.error('Signup error:', error);
-      showError('email', 'An error occurred. Please try again');
-      btn.textContent = 'Sign Up';
-      btn.disabled = false;
+      return;
     }
-  }, 1500);
+    
+    // Set current user from backend response with ALL data
+    currentUser = {
+      id: data.user.id,
+      name: data.user.fullName,
+      fullName: data.user.fullName,
+      email: data.user.email,
+      teachSkills: data.user.teachSkills || [],
+      learnSkills: data.user.learnSkills || [],
+      bio: data.user.bio || ''
+    };
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    
+    console.log('Signup successful, user data:', currentUser);
+    showToast('Account created successfully!');
+    closeModal('signupModal');
+    
+    // Open preferences modal after a short delay
+    setTimeout(() => {
+      console.log('Opening preferences modal...');
+      const prefsModal = document.getElementById('preferencesModal');
+      if (prefsModal) {
+        openModal('preferencesModal');
+      } else {
+        console.error('Preferences modal not found! Redirecting to profile...');
+        setTimeout(() => {
+          window.location.href = 'profile.html';
+        }, 500);
+      }
+    }, 300);
+    
+    event.target.reset();
+  } catch (error) {
+    const message = error?.message || 'An error occurred. Please try again';
+    showError('email', message);
+  } finally {
+    btn.textContent = 'Sign Up';
+    btn.disabled = false;
+  }
 }
 
-function handlePreferences(event) {
+async function handlePreferences(event) {
   event.preventDefault();
   
-  // Get selected skills
   const teachSkills = Array.from(document.querySelectorAll('#teachSkills .skill-tag.selected'))
     .map(tag => tag.textContent.trim());
   const learnSkills = Array.from(document.querySelectorAll('#learnSkills .skill-tag.selected'))
     .map(tag => tag.textContent.trim());
   const bio = document.getElementById('bio').value.trim();
   
-  // Validate at least one skill selected
   if (teachSkills.length === 0) {
     showToast('Please select at least one skill to teach');
     return;
@@ -432,48 +504,56 @@ function handlePreferences(event) {
     return;
   }
   
-  // Simulate saving preferences
   const btn = event.target.querySelector('.btn-primary');
   btn.textContent = 'Saving...';
   btn.disabled = true;
   
-  setTimeout(() => {
-    try {
-      // Store preferences
-      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-      userData.teachSkills = teachSkills;
-      userData.learnSkills = learnSkills;
-      userData.bio = bio || 'Passionate learner and teacher. Excited to connect with others!';
-      userData.profileComplete = true;
-      userData.updatedAt = new Date().toISOString();
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
-      // Mark user as logged in
-      localStorage.setItem('isLoggedIn', 'true');
-      
-      showToast('Profile setup complete!');
-      
-      // Close preferences modal and show success
-      closeModal('preferencesModal');
-      setTimeout(() => {
-        document.getElementById('successModal').classList.add('active');
-      }, 300);
-      
+  try {
+    const response = await fetch('/api/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ teachSkills, learnSkills, bio })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      showToast(data.message || 'Failed to save preferences');
       btn.textContent = 'Complete Setup';
       btn.disabled = false;
-      event.target.reset();
-      
-      // Reset skill selections
-      document.querySelectorAll('.skill-tag.selected').forEach(tag => {
-        tag.classList.remove('selected');
-      });
-    } catch (error) {
-      console.error('Preferences save error:', error);
-      showToast('An error occurred. Please try again');
-      btn.textContent = 'Complete Setup';
-      btn.disabled = false;
+      return;
     }
-  }, 1500);
+    
+    // Update current user with complete saved data
+    if (currentUser) {
+      currentUser = {
+        ...currentUser,
+        teachSkills: data.user.teachSkills || teachSkills,
+        learnSkills: data.user.learnSkills || learnSkills,
+        bio: data.user.bio || bio
+      };
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+    
+    showToast('Profile setup complete!');
+    closeModal('preferencesModal');
+    
+    setTimeout(() => {
+      openModal('successModal');
+    }, 300);
+    
+    event.target.reset();
+    document.querySelectorAll('.skill-tag.selected').forEach(tag => {
+      tag.classList.remove('selected');
+    });
+  } catch (error) {
+    const message = error?.message || 'An error occurred. Please try again';
+    showToast(message);
+  } finally {
+    btn.textContent = 'Complete Setup';
+    btn.disabled = false;
+  }
 }
 
 /* ============================================
@@ -491,23 +571,19 @@ function goToDashboard() {
    UPDATE UI FOR LOGGED IN USER
    Show user menu instead of login/signup buttons
 ============================================ */
-function updateUIForLoggedInUser() {
+function updateUIForLoggedInUser(userData = currentUser) {
   const authButtons = document.getElementById('authButtons');
   const userMenu = document.getElementById('userMenu');
+  
+  if (!userData) return;
   
   if (authButtons && userMenu) {
     authButtons.style.display = 'none';
     userMenu.style.display = 'block';
     
-    // Set user initials
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-    const initials = userData.fullName
-      ? userData.fullName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-      : 'U';
-    
     const userInitials = document.getElementById('userInitials');
     if (userInitials) {
-      userInitials.textContent = initials;
+      userInitials.textContent = getInitialsFromName(userData.fullName);
     }
   }
 }
@@ -516,22 +592,26 @@ function updateUIForLoggedInUser() {
    LOGOUT FUNCTION
    Clear user data and update UI
 ============================================ */
-function logout() {
-  if (confirm('Are you sure you want to logout?')) {
-    localStorage.removeItem('isLoggedIn');
-    
-    const authButtons = document.getElementById('authButtons');
-    const userMenu = document.getElementById('userMenu');
-    
-    if (authButtons && userMenu) {
-      authButtons.style.display = 'flex';
-      userMenu.style.display = 'none';
-    }
-    
-    // Redirect to home if on profile page
-    if (window.location.pathname.includes('profile.html')) {
-      window.location.href = 'index.html';
-    }
+async function logout() {
+  if (!confirm('Are you sure you want to logout?')) return;
+  
+  try {
+    await apiRequest('/api/logout', { method: 'POST' });
+  } catch (error) {
+    console.error('Logout error:', error);
+  }
+  
+  currentUser = null;
+  const authButtons = document.getElementById('authButtons');
+  const userMenu = document.getElementById('userMenu');
+  
+  if (authButtons && userMenu) {
+    authButtons.style.display = 'flex';
+    userMenu.style.display = 'none';
+  }
+  
+  if (window.location.pathname.includes('profile.html')) {
+    window.location.href = 'index.html';
   }
 }
 
@@ -539,11 +619,17 @@ function logout() {
    CHECK LOGIN STATUS
    Check if user is logged in and update UI accordingly
 ============================================ */
-function checkLoginStatus() {
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-  
-  if (isLoggedIn) {
-    updateUIForLoggedInUser();
+async function checkLoginStatus() {
+  const user = await fetchCurrentUser();
+  if (user) {
+    updateUIForLoggedInUser(user);
+  } else {
+    const authButtons = document.getElementById('authButtons');
+    const userMenu = document.getElementById('userMenu');
+    if (authButtons && userMenu) {
+      authButtons.style.display = 'flex';
+      userMenu.style.display = 'none';
+    }
   }
 }
 
@@ -578,71 +664,68 @@ function initSmoothScroll() {
    LOAD PROFILE DATA
    Load and display user profile information
 ============================================ */
-function loadProfileData() {
-  // Check if we're on the profile page
+async function loadProfileData() {
   if (!document.querySelector('.profile-container')) return;
   
   try {
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    let userData = await fetchCurrentUser();
     
-    if (!userData.fullName) {
-      // No user data, redirect to home
-      console.warn('No user data found, redirecting to home');
-      window.location.href = 'index.html';
-      return;
+    // Fallback to localStorage if API fails
+    if (!userData) {
+      const storedUser = localStorage.getItem('currentUser');
+      if (storedUser) {
+        userData = JSON.parse(storedUser);
+        console.log('Using cached user data from localStorage');
+      } else {
+        console.log('No user data found, redirecting to home');
+        window.location.href = 'index.html';
+        return;
+      }
     }
+    
+    console.log('Loaded user data:', userData);
   
-  // Update profile header
-  const profileName = document.getElementById('profileName');
-  const profileEmail = document.getElementById('profileEmail');
-  const profileAvatar = document.getElementById('profileAvatar');
-  
-  if (profileName) profileName.textContent = userData.fullName;
-  if (profileEmail) profileEmail.textContent = userData.email;
-  
-  if (profileAvatar) {
-    const initials = userData.fullName
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-    profileAvatar.textContent = initials;
-  }
-  
-  // Update user menu initials
-  const userInitials = document.getElementById('userInitials');
-  if (userInitials) {
-    const initials = userData.fullName
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-    userInitials.textContent = initials;
-  }
-  
-  // Update skills to teach
-  const teachSkillsList = document.getElementById('teachSkillsList');
-  if (teachSkillsList && userData.teachSkills) {
-    teachSkillsList.innerHTML = userData.teachSkills
-      .map(skill => `<div class="skill-item">${skill}</div>`)
-      .join('');
-  }
-  
-  // Update skills to learn
-  const learnSkillsList = document.getElementById('learnSkillsList');
-  if (learnSkillsList && userData.learnSkills) {
-    learnSkillsList.innerHTML = userData.learnSkills
-      .map(skill => `<div class="skill-item">${skill}</div>`)
-      .join('');
-  }
-  
-  // Update bio
-  const profileBio = document.getElementById('profileBio');
-  if (profileBio && userData.bio) {
-    profileBio.textContent = userData.bio;
-  }
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+    const profileAvatar = document.getElementById('profileAvatar');
+    
+    if (profileName) profileName.textContent = userData.fullName || userData.name || 'User';
+    if (profileEmail) profileEmail.textContent = userData.email || '';
+    if (profileAvatar) {
+      profileAvatar.textContent = getInitialsFromName(userData.fullName || userData.name);
+    }
+    
+    const userInitials = document.getElementById('userInitials');
+    if (userInitials) {
+      userInitials.textContent = getInitialsFromName(userData.fullName || userData.name);
+    }
+    
+    const teachSkillsList = document.getElementById('teachSkillsList');
+    if (teachSkillsList) {
+      if (userData.teachSkills && userData.teachSkills.length > 0) {
+        teachSkillsList.innerHTML = userData.teachSkills
+          .map(skill => `<div class="skill-item">${skill}</div>`)
+          .join('');
+      } else {
+        teachSkillsList.innerHTML = '<p style="color: var(--muted-foreground); text-align: center;">No skills added yet</p>';
+      }
+    }
+    
+    const learnSkillsList = document.getElementById('learnSkillsList');
+    if (learnSkillsList) {
+      if (userData.learnSkills && userData.learnSkills.length > 0) {
+        learnSkillsList.innerHTML = userData.learnSkills
+          .map(skill => `<div class="skill-item">${skill}</div>`)
+          .join('');
+      } else {
+        learnSkillsList.innerHTML = '<p style="color: var(--muted-foreground); text-align: center;">No skills added yet</p>';
+      }
+    }
+    
+    const profileBio = document.getElementById('profileBio');
+    if (profileBio) {
+      profileBio.textContent = userData.bio || 'No bio added yet. Click "Edit Profile" to add one!';
+    }
   } catch (error) {
     console.error('Error loading profile data:', error);
     showToast('Error loading profile. Please try logging in again.');
@@ -654,44 +737,250 @@ function loadProfileData() {
 
 /* ============================================
    EDIT PROFILE
-   Open modal to edit profile (placeholder for future functionality)
+   Open modal to edit profile and pre-fill with current data
 ============================================ */
 function editProfile() {
-  alert('Edit profile functionality coming soon!');
+  console.log('Edit profile clicked');
+  
+  try {
+    // Check if modal exists
+    const modal = document.getElementById('editProfileModal');
+    console.log('Modal found:', !!modal);
+    
+    if (!modal) {
+      console.error('Edit profile modal not found in DOM');
+      showToast('Profile edit is only available on the profile page');
+      return;
+    }
+    
+    // Get user data from localStorage directly (more reliable than API for editing)
+    const storedUser = localStorage.getItem('currentUser');
+    console.log('Stored user data:', storedUser);
+    
+    let userData = storedUser ? JSON.parse(storedUser) : null;
+    
+    if (!userData) {
+      console.error('No user data found in localStorage');
+      showToast('Please log in to edit your profile');
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1500);
+      return;
+    }
+    
+    console.log('User data loaded:', userData);
+    
+    // Pre-fill the form with current data
+    const editBio = document.getElementById('editBio');
+    console.log('Bio field found:', !!editBio);
+    if (editBio) {
+      editBio.value = userData.bio || '';
+      console.log('Bio set to:', userData.bio);
+    }
+    
+    // Pre-select teach skills
+    const teachSkillTags = document.querySelectorAll('#editTeachSkills .skill-tag');
+    console.log('Found teach skill tags:', teachSkillTags.length);
+    
+    if (teachSkillTags.length === 0) {
+      console.error('No teach skill tags found! Make sure #editTeachSkills container exists');
+    }
+    
+    teachSkillTags.forEach(tag => {
+      tag.classList.remove('selected');
+      const skillName = tag.textContent.trim();
+      if (userData.teachSkills && userData.teachSkills.includes(skillName)) {
+        tag.classList.add('selected');
+        console.log('Selected teach skill:', skillName);
+      }
+    });
+    
+    // Pre-select learn skills
+    const learnSkillTags = document.querySelectorAll('#editLearnSkills .skill-tag');
+    console.log('Found learn skill tags:', learnSkillTags.length);
+    
+    if (learnSkillTags.length === 0) {
+      console.error('No learn skill tags found! Make sure #editLearnSkills container exists');
+    }
+    
+    learnSkillTags.forEach(tag => {
+      tag.classList.remove('selected');
+      const skillName = tag.textContent.trim();
+      if (userData.learnSkills && userData.learnSkills.includes(skillName)) {
+        tag.classList.add('selected');
+        console.log('Selected learn skill:', skillName);
+      }
+    });
+    
+    console.log('Opening edit profile modal...');
+    openModal('editProfileModal');
+    console.log('Modal should now be visible');
+    
+  } catch (error) {
+    console.error('Error in editProfile function:', error);
+    showToast('Error: ' + error.message);
+  }
+}
+
+/* ============================================
+   HANDLE EDIT PROFILE
+   Save updated profile information
+============================================ */
+async function handleEditProfile(event) {
+  event.preventDefault();
+  
+  const teachSkills = Array.from(document.querySelectorAll('#editTeachSkills .skill-tag.selected'))
+    .map(tag => tag.textContent.trim());
+  const learnSkills = Array.from(document.querySelectorAll('#editLearnSkills .skill-tag.selected'))
+    .map(tag => tag.textContent.trim());
+  const bio = document.getElementById('editBio').value.trim();
+  
+  if (teachSkills.length === 0) {
+    showToast('Please select at least one skill to teach');
+    return;
+  }
+  
+  if (learnSkills.length === 0) {
+    showToast('Please select at least one skill to learn');
+    return;
+  }
+  
+  const btn = event.target.querySelector('.btn-primary');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  
+  try {
+    const response = await fetch('/api/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ teachSkills, learnSkills, bio })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      showToast(data.message || 'Failed to save changes');
+      btn.textContent = 'Save Changes';
+      btn.disabled = false;
+      return;
+    }
+    
+    // Update current user in localStorage with complete data
+    if (currentUser) {
+      currentUser = {
+        ...currentUser,
+        teachSkills: data.user.teachSkills || teachSkills,
+        learnSkills: data.user.learnSkills || learnSkills,
+        bio: data.user.bio || bio
+      };
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+    
+    showToast('Profile updated successfully!');
+    closeModal('editProfileModal');
+    
+    // Reload profile data to show updated information
+    await loadProfileData();
+    
+  } catch (error) {
+    const message = error?.message || 'An error occurred. Please try again';
+    showToast(message);
+  } finally {
+    btn.textContent = 'Save Changes';
+    btn.disabled = false;
+  }
 }
 
 /* ============================================
    INITIALIZE ALL FUNCTIONS
    Run when DOM is loaded
 ============================================ */
-document.addEventListener('DOMContentLoaded', () => {
-  // Initialize background animation
+document.addEventListener('DOMContentLoaded', async () => {
   create3DSquares();
   window.addEventListener("resize", create3DSquares);
   
-  // Initialize header scroll effect
   initHeaderScroll();
-  
-  // Initialize mobile menu
   initMobileMenu();
-  
-  // Initialize modal close on outside click
   initModalCloseOnOutsideClick();
-  
-  // Initialize smooth scroll
   initSmoothScroll();
   
-  // Check login status
-  checkLoginStatus();
+  await checkLoginStatus();
+  await loadProfileData();
+  loadNotificationPreference();
   
-  // Load profile data if on profile page
-  loadProfileData();
+  // Restore active chat if it exists (works across all pages)
+  setTimeout(() => {
+    restoreActiveChatOnAllPages();
+  }, 100);
 });
+
+/* ============================================
+   RESTORE ACTIVE CHAT ON ALL PAGES
+   Restore chat window state from localStorage
+============================================ */
+function restoreActiveChatOnAllPages() {
+  const activeChatUser = localStorage.getItem('activeChatUser');
+  const isMinimized = localStorage.getItem('chatMinimized') === 'true';
+  
+  const chatWindow = document.getElementById('chatWindow');
+  const chatMinimized = document.getElementById('chatMinimized');
+  
+  // Check if chat elements exist on this page
+  if (!chatWindow || !chatMinimized) {
+    return;
+  }
+  
+  if (activeChatUser) {
+    try {
+      const user = JSON.parse(activeChatUser);
+      console.log('Restoring chat for user:', user.name);
+      
+      // Update chat header
+      const chatAvatar = document.getElementById('chatAvatar');
+      const chatUserName = document.getElementById('chatUserName');
+      const chatUserStatus = document.getElementById('chatUserStatus');
+      
+      if (chatAvatar) chatAvatar.textContent = user.initials;
+      if (chatUserName) chatUserName.textContent = user.name;
+      if (chatUserStatus) {
+        chatUserStatus.textContent = user.isOnline ? 'Online' : 'Offline';
+        chatUserStatus.style.color = user.isOnline ? '#10b981' : '#9ca3af';
+      }
+      
+      // Update minimized chat info
+      const chatMiniAvatar = document.getElementById('chatMiniAvatar');
+      const chatMiniName = document.getElementById('chatMiniName');
+      
+      if (chatMiniAvatar) chatMiniAvatar.textContent = user.initials;
+      if (chatMiniName) chatMiniName.textContent = user.name;
+      
+      // Load messages if function exists
+      if (typeof loadChatMessages === 'function') {
+        loadChatMessages(user.id);
+      }
+      
+      // Show chat in correct state
+      if (isMinimized) {
+        chatWindow.classList.remove('active');
+        chatMinimized.style.display = 'flex';
+        console.log('Chat restored in minimized state');
+      } else {
+        chatWindow.classList.add('active');
+        chatMinimized.style.display = 'none';
+        console.log('Chat restored in open state');
+      }
+    } catch (error) {
+      console.error('Error restoring chat:', error);
+    }
+  }
+}
 
 /* ============================================
    EXPORT FUNCTIONS FOR INLINE USE
    Make functions available globally
 ============================================ */
+window.openModal = openModal;
 window.openLoginModal = openLoginModal;
 window.openSignupModal = openSignupModal;
 window.closeModal = closeModal;
@@ -704,6 +993,7 @@ window.handlePreferences = handlePreferences;
 window.goToDashboard = goToDashboard;
 window.logout = logout;
 window.editProfile = editProfile;
+window.handleEditProfile = handleEditProfile;
 window.toggleUserDropdown = toggleUserDropdown;
 
 
@@ -769,20 +1059,20 @@ function showToast(message) {
    DELETE ACCOUNT
    Handle account deletion
 ============================================ */
-function deleteAccount() {
-  if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-    if (confirm('This will permanently delete all your data. Are you absolutely sure?')) {
-      // Clear all user data
-      localStorage.clear();
-      
-      // Show success message
-      showToast('Account deleted successfully.');
-      
-      // Redirect to home page after 2 seconds
-      setTimeout(() => {
-        window.location.href = 'index.html';
-      }, 2000);
-    }
+async function deleteAccount() {
+  if (!confirm('Are you sure you want to delete your account? This action cannot be undone.')) return;
+  if (!confirm('This will permanently delete all your data. Are you absolutely sure?')) return;
+  
+  try {
+    await apiRequest('/api/account', { method: 'DELETE' });
+    currentUser = null;
+    showToast('Account deleted successfully.');
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 1500);
+  } catch (error) {
+    const message = error?.message || 'Failed to delete account. Please try again.';
+    showToast(message);
   }
 }
 
@@ -799,14 +1089,6 @@ function loadNotificationPreference() {
     checkbox.checked = notificationsEnabled === null ? true : notificationsEnabled === 'true';
   }
 }
-
-// Update the DOMContentLoaded event listener
-document.addEventListener('DOMContentLoaded', () => {
-  // ...existing code...
-  
-  // Load notification preference
-  loadNotificationPreference();
-});
 
 // Export new functions
 window.toggleNotifications = toggleNotifications;

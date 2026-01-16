@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find Learning Partners - SkillSwap</title>
+  <meta name="description" content="Browse and connect with skill exchange partners" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="community.css">
+</head>
+<body>
+  <!-- Background Elements -->
+  <div class="gradient-mesh"></div>
+
+  <!-- Header Navigation -->
+  <header class="header" id="header">
+    <div class="header-content">
+      <div class="logo-block" onclick="window.location.href='index.html'">
+        <span class="logo-svg">
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="none">
+            <rect x="5" y="5" width="22" height="22" rx="5" fill="url(#paint0_linear)"/>
+            <rect x="11" y="11" width="10" height="10" rx="3" fill="white" fill-opacity="0.7"/>
+            <defs>
+              <linearGradient id="paint0_linear" x1="5" y1="5" x2="27" y2="27" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#6C3AE1"/>
+                <stop offset="1" stop-color="#36C7FF"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </span>
+        <span class="logo-title">SkillSwap</span>
+      </div>
+
+      <nav class="nav-links" id="navLinks">
+        <a href="index.html">Home</a>
+        <a href="index.html#features">Features</a>
+        <a href="community.html" class="active">Community</a>
+      </nav>
+
+      <div class="header-btns" id="authButtons">
+        <button class="btn ghost" onclick="openLoginModal()">Log In</button>
+        <button class="btn gradient" onclick="openSignupModal()">Sign Up</button>
+      </div>
+
+      <!-- User menu when logged in -->
+      <div class="user-menu" id="userMenu" style="display: none;">
+        <div class="user-avatar" onclick="toggleUserDropdown()">
+          <span id="userInitials">JD</span>
+        </div>
+        <div class="user-dropdown" id="userDropdown">
+          <a href="profile.html">My Profile</a>
+          <a href="#" onclick="logout()">Logout</a>
+        </div>
+      </div>
+
+      <div class="menu-toggle" id="menuToggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="community-main">
+    <!-- Page Header -->
+    <section class="community-hero">
+      <div class="container">
+        <h1 class="page-title">
+          Find Your Perfect <span class="gradient-text">Learning Partner</span>
+        </h1>
+        <p class="page-subtitle">
+          Connect with thousands of learners and teachers. Exchange skills, grow together.
+        </p>
+      </div>
+    </section>
+
+    <!-- Search and Filter Section -->
+    <section class="search-section">
+      <div class="container">
+        <div class="search-bar-wrapper">
+          <div class="search-input-group">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              id="searchInput" 
+              class="search-input" 
+              placeholder="Search by name, skill, or interest..."
+              oninput="filterUsers()"
+            >
+          </div>
+          <button class="filter-toggle-btn" onclick="toggleFilters()">
+            <span>⚙️</span> Filters
+          </button>
+        </div>
+
+        <!-- Advanced Filters Panel -->
+        <div class="filters-panel" id="filtersPanel">
+          <div class="filters-grid">
+            <div class="filter-group">
+              <label class="filter-label">Skills They Teach</label>
+              <select id="teachFilter" onchange="filterUsers()" class="filter-select">
+                <option value="">All Skills</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Graphic Design">Graphic Design</option>
+                <option value="Photography">Photography</option>
+                <option value="Writing">Writing</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Music">Music</option>
+                <option value="Cooking">Cooking</option>
+                <option value="Language">Language</option>
+                <option value="Data Science">Data Science</option>
+                <option value="Video Editing">Video Editing</option>
+                <option value="Business">Business</option>
+                <option value="Fitness">Fitness</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label">Skills They Want</label>
+              <select id="learnFilter" onchange="filterUsers()" class="filter-select">
+                <option value="">All Skills</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Graphic Design">Graphic Design</option>
+                <option value="Photography">Photography</option>
+                <option value="Writing">Writing</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Music">Music</option>
+                <option value="Cooking">Cooking</option>
+                <option value="Language">Language</option>
+                <option value="Data Science">Data Science</option>
+                <option value="Video Editing">Video Editing</option>
+                <option value="Business">Business</option>
+                <option value="Fitness">Fitness</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label">Sort By</label>
+              <select id="sortFilter" onchange="sortUsers()" class="filter-select">
+                <option value="match">Best Match</option>
+                <option value="recent">Recently Joined</option>
+                <option value="popular">Most Popular</option>
+                <option value="alphabetical">A-Z</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label class="filter-label">Experience Level</label>
+              <select id="levelFilter" onchange="filterUsers()" class="filter-select">
+                <option value="">All Levels</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Expert">Expert</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="filter-actions">
+            <button class="btn-clear-filters" onclick="clearFilters()">Clear All Filters</button>
+            <span class="results-count" id="resultsCount">Showing 24 members</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Users Grid Section -->
+    <section class="users-section">
+      <div class="container">
+        <!-- Quick Filter Chips -->
+        <div class="quick-filters">
+          <button class="chip active" data-filter="all" onclick="quickFilter('all')">
+            All Members
+          </button>
+          <button class="chip" data-filter="perfect-match" onclick="quickFilter('perfect-match')">
+            ✨ Perfect Matches
+          </button>
+          <button class="chip" data-filter="online" onclick="quickFilter('online')">
+            🟢 Online Now
+          </button>
+          <button class="chip" data-filter="new" onclick="quickFilter('new')">
+            🆕 New Members
+          </button>
+        </div>
+
+        <!-- Users Grid -->
+        <div class="users-grid" id="usersGrid">
+          <!-- User cards will be dynamically generated here -->
+        </div>
+
+        <!-- Load More Button -->
+        <div class="load-more-wrapper">
+          <button class="btn-load-more" id="loadMoreBtn" onclick="loadMoreUsers()">
+            Load More Members
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Empty State (hidden by default) -->
+    <section class="empty-state" id="emptyState" style="display: none;">
+      <div class="empty-state-content">
+        <div class="empty-icon">🔍</div>
+        <h3>No members found</h3>
+        <p>Try adjusting your filters or search terms</p>
+        <button class="btn-primary" onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3>SkillSwap</h3>
+        <p style="color: rgba(255,255,255,0.7); line-height: 1.7;">
+          Empowering people to learn and teach skills in a collaborative community.
+        </p>
+      </div>
+
+      <div class="footer-section">
+        <h3>Product</h3>
+        <ul>
+          <li><a href="index.html#features">Features</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#testimonials">Testimonials</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Company</h3>
+        <ul>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#careers">Careers</a></li>
+          <li><a href="#blog">Blog</a></li>
+          <li><a href="#press">Press Kit</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-section">
+        <h3>Support</h3>
+        <ul>
+          <li><a href="#help">Help Center</a></li>
+          <li><a href="#contact">Contact Us</a></li>
+          <li><a href="#privacy">Privacy Policy</a></li>
+          <li><a href="#terms">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 SkillSwap. All rights reserved. Built with ❤️ for learners worldwide.</p>
+    </div>
+  </footer>
+
+  <!-- User Profile Modal -->
+  <div class="modal-overlay" id="userProfileModal">
+    <div class="modal modal-large">
+      <button class="modal-close" onclick="closeModal('userProfileModal')">×</button>
+      <div class="profile-modal-content" id="profileModalContent">
+        <!-- Content will be dynamically loaded -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Connect Request Modal -->
+  <div class="modal-overlay" id="connectModal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('connectModal')">×</button>
+      <div class="modal-header">
+        <h2>Send Connection Request</h2>
+        <p>Introduce yourself and explain what you'd like to exchange</p>
+      </div>
+      <form id="connectForm" onsubmit="sendConnectionRequest(event)">
+        <div class="form-group">
+          <label>Your Message</label>
+          <textarea 
+            id="connectMessage" 
+            placeholder="Hi! I'd love to exchange skills with you..."
+            required
+            rows="5"
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal('connectModal')">Cancel</button>
+          <button type="submit" class="btn-primary">Send Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Chat Window -->
+  <div class="chat-window" id="chatWindow">
+    <div class="chat-header">
+      <div class="chat-user-info">
+        <div class="chat-avatar" id="chatAvatar">SM</div>
+        <div>
+          <div class="chat-user-name" id="chatUserName">User</div>
+          <div class="chat-user-status" id="chatUserStatus">Online</div>
+        </div>
+      </div>
+      <div class="chat-actions">
+        <button class="chat-minimize-btn" onclick="minimizeChat()" aria-label="Minimize chat">−</button>
+        <button class="chat-close-btn" onclick="closeChat()" aria-label="Close chat">×</button>
+      </div>
+    </div>
+    
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-date-divider">Today</div>
+    </div>
+    
+    <div class="chat-input-container">
+      <textarea 
+        class="chat-input" 
+        id="chatInput" 
+        placeholder="Type a message..."
+        rows="1"
+        onkeydown="handleChatKeyPress(event)"
+      ></textarea>
+      <button class="chat-send-btn" onclick="sendMessage()" aria-label="Send message">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Chat Minimized Button -->
+  <div class="chat-minimized" id="chatMinimized" style="display: none;" onclick="restoreChat()">
+    <div class="chat-mini-avatar" id="chatMiniAvatar">SM</div>
+    <div class="chat-mini-info">
+      <div class="chat-mini-name" id="chatMiniName">User</div>
+      <div class="chat-mini-preview" id="chatMiniPreview">Click to open chat</div>
+    </div>
+    <span class="chat-mini-badge" id="chatMiniBadge" style="display: none;">1</span>
+  </div>
+
+  <link rel="stylesheet" href="chat.css">
+  <script src="profile.js"></script>
+  <script src="script.js"></script>
+  <script src="community.js"></script>
+</body>
+</html>
